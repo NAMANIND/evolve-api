@@ -25,22 +25,22 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
 
-deploy:
-  needs: build
-  runs-on: [aws-ec2]
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+  deploy:
+    needs: build
+    runs-on: [aws-ec2]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Create .env file
-      run: |
-        echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
-        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
-        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
-        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
-        echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
+      - name: Create .env file
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+          echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
 
-    - name: Deploy with docker-compose
-      run: |
-        docker-compose down
-        docker-compose up -d
+      - name: Deploy with docker-compose
+        run: |
+          docker-compose down
+          docker-compose up -d
