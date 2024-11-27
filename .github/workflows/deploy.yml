@@ -11,16 +11,18 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Login to docker hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v2 # More secure than using -u -p
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest .
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }} \
+                       -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest .
 
-      - name: Publish image to docker hub
+      - name: Publish image to Docker Hub
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
@@ -29,25 +31,24 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Pull image from docker hub
+      - name: Pull image from Docker Hub
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
 
       - name: Delete old container
         run: docker rm -f nodejs-app-container || true # Won't fail if container doesn't exist
 
-      - name: Run docker container
-        environment:
-      - NODE_ENV=production
-      - MONGODB_URI=${MONGODB_URI}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+      - name: Run Docker container
         run: |
           docker run -d \
             -p 3000:3000 \
             --name nodejs-app-container \
             --restart unless-stopped \
+            --env NODE_ENV=production \
+            --env MONGODB_URI=${{ secrets.MONGODB_URI }} \
+            --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            --env AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            --env AWS_REGION=${{ secrets.AWS_REGION }} \
+            --env AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }} \
             ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
 
       - name: Clean up old images
