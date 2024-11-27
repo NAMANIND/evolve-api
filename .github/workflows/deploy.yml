@@ -25,23 +25,22 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
 
-  deploy:
-    needs: build
-    runs-on: self-hosted
-    steps:
-      - name: Pull image from docker hub
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
+deploy:
+  needs: build
+  runs-on: [aws-ec2]
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Delete old container
-        run: docker rm -f nodejs-app-container || true # Won't fail if container doesn't exist
+    - name: Create .env file
+      run: |
+        echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+        echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
 
-      - name: Run docker container
-        run: |
-          docker run -d \
-            -p 3000:3000 \
-            --name nodejs-app-container \
-            --restart unless-stopped \
-            ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
-
-      - name: Clean up old images
-        run: docker system prune -f
+    - name: Deploy with docker-compose
+      run: |
+        docker-compose down
+        docker-compose up -d
