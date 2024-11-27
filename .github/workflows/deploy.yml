@@ -36,20 +36,16 @@ jobs:
         run: docker rm -f nodejs-app-container || true # Won't fail if container doesn't exist
 
       - name: Run docker container
+        environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
         run: |
           docker run -d \
             -p 3000:3000 \
-            -e NODE_ENV=production \
-            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            -e AWS_REGION=${{ secrets.AWS_REGION }} \
-            -e AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }} \
-            -v ./logs:/usr/src/app/logs \
-            --health-cmd="curl -f http://localhost:3000/health" \
-            --health-interval=30s \
-            --health-timeout=10s \
-            --health-retries=3 \
             --name nodejs-app-container \
             --restart unless-stopped \
             ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
