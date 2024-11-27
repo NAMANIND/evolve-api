@@ -14,6 +14,7 @@ const exerciseSchema = new mongoose.Schema({
     enum: ["LIGHT", "MODERATE", "INTENSE"],
     required: true,
   },
+  calories: { type: Number, required: true },
   videoUrl: { type: String },
 });
 

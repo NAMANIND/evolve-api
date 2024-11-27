@@ -2,11 +2,11 @@
 import { z } from "zod";
 
 export const userSchema = z.object({
-  name: z.string().min(2).max(50),
-  weight: z.number().min(20).max(500),
-  age: z.number().min(13).max(120),
-  height: z.number().min(100).max(300),
-  targetWeight: z.number().min(20).max(500),
+  name: z.string().min(1),
+  weight: z.number().min(1),
+  age: z.number().min(1),
+  height: z.number().min(1),
+  targetWeight: z.number().min(1),
 });
 
 export const exerciseSchema = z.object({
@@ -19,8 +19,9 @@ export const exerciseSchema = z.object({
     "SWIMMING",
     "HIIT",
   ]),
-  duration: z.number().min(1).max(720),
+  duration: z.number().min(1),
   intensity: z.enum(["LIGHT", "MODERATE", "INTENSE"]),
+  calories: z.number().min(1),
   videoUrl: z.string().url().optional(),
 });
 
