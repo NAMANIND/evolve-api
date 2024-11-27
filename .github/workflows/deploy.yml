@@ -37,7 +37,7 @@ jobs:
 
       - name: Run docker container
         run: |
-          docker run -d \
+          docker run -d  \
             -p 3000:3000 \
             -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
             -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
