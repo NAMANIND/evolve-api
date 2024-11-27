@@ -37,13 +37,19 @@ jobs:
 
       - name: Run docker container
         run: |
-          docker run -d  \
+          docker run -d \
             -p 3000:3000 \
+            -e NODE_ENV=production \
             -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
             -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
             -e AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }} \
+            -v ./logs:/usr/src/app/logs \
+            --health-cmd="curl -f http://localhost:3000/health" \
+            --health-interval=30s \
+            --health-timeout=10s \
+            --health-retries=3 \
             --name nodejs-app-container \
             --restart unless-stopped \
             ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
