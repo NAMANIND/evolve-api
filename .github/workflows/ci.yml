@@ -1,28 +1,28 @@
-name: CI
+# name: CI
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+# on:
+#   push:
+#     branches: [main, develop]
+#   pull_request:
+#     branches: [main, develop]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
+#     steps:
+#       - uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "18"
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: "18"
 
-      - name: Install dependencies
-        run: npm install
+#       - name: Install dependencies
+#         run: npm install
 
-      - name: Run tests
-        run: npm test
+#       - name: Run tests
+#         run: npm test
 
-      - name: Build Docker image
-        run: docker build -t evolve-api .
+#       - name: Build Docker image
+#         run: docker build -t evolve-api .

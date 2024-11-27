@@ -31,25 +31,23 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Pull image from Docker Hub
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
+      - name: Checkout source
+        uses: actions/checkout@v3
 
-      - name: Delete old container
-        run: docker rm -f nodejs-app-container || true
-
-      - name: Run Docker container
+      - name: Login to Docker Hub
         run: |
-          docker run -d \
-            -p 3000:3000 \
-            --name nodejs-app-container \
-            --restart unless-stopped \
-            --env NODE_ENV=production \
-            --env MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --env AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            --env AWS_REGION=${{ secrets.AWS_REGION }} \
-            --env AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }} \
-            ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Pull latest image in docker-compose
+        run: |
+          export IMAGE_TAG=${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
+          sed -i "s|image:.*|image: $IMAGE_TAG|g" docker-compose.yml
+
+      - name: Deploy using docker-compose
+        run: |
+          docker-compose down || true # Stop any running containers
+          docker-compose pull          # Pull the latest image
+          docker-compose up -d         # Start the updated containers
 
       - name: Clean up old images
         run: docker system prune -f
