@@ -27,7 +27,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: [self-hosted, ec2]
+    runs-on: self-hosted
     steps:
       - name: Pull image from docker hub
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
