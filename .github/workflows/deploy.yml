@@ -18,19 +18,19 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }} -t ${{ secrets.DOCKER_USERNAME }}/nodejs-app:latest .
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest .
 
       - name: Publish image to docker hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
 
   deploy:
     needs: build
     runs-on: [ip-172-31-0-248]
     steps:
       - name: Pull image from docker hub
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
 
       - name: Delete old container
         run: docker rm -f nodejs-app-container || true # Won't fail if container doesn't exist
@@ -41,7 +41,7 @@ jobs:
             -p 3000:3000 \
             --name nodejs-app-container \
             --restart unless-stopped \
-            ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
 
       - name: Clean up old images
         run: docker system prune -f
