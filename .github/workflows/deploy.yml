@@ -5,40 +5,43 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout source
+        uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Login to docker hub
+        uses: docker/login-action@v2 # More secure than using -u -p
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }} -t ${{ secrets.DOCKER_USERNAME }}/nodejs-app:latest .
 
-      - name: Build and push Docker image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: fitness-tracker
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Publish image to docker hub
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/nodejs-app:latest
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/fitness-tracker
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d
+  deploy:
+    needs: build
+    runs-on: [ip-172-31-0-248]
+    steps:
+      - name: Pull image from docker hub
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
+
+      - name: Delete old container
+        run: docker rm -f nodejs-app-container || true # Won't fail if container doesn't exist
+
+      - name: Run docker container
+        run: |
+          docker run -d \
+            -p 3000:3000 \
+            --name nodejs-app-container \
+            --restart unless-stopped \
+            ${{ secrets.DOCKER_USERNAME }}/nodejs-app:${{ github.sha }}
+
+      - name: Clean up old images
+        run: docker system prune -f
