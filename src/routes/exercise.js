@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/:userId", validateSchema(exerciseSchema), async (req, res) => {
   try {
+    console.log(req.body);
     const exercise = await Exercise.create({
       ...req.body,
       userId: req.params.userId,
