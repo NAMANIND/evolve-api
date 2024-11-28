@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: namanrai/nodejs-app:latest # Replace with your actual image
+    image: ${IMAGE_NAME}
     ports:
       - "3000:3000"
     env_file:

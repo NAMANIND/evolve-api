@@ -26,30 +26,38 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
+deploy:
+  runs-on: self-hosted
+  steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
 
-  deploy:
-    runs-on: self-hosted
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
+    - name: Create .env file for docker-compose
+      run: |
+        echo "NODE_ENV=production" >> .env
+        echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+        echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
 
-      - name: Create .env file for docker-compose
-        run: |
-          echo "NODE_ENV=production" >> .env
-          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
-          echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
+    # Add explicit Docker login before pulling
+    - name: Docker Login
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Pull and deploy using docker-compose
+      env:
+        DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
+      run: |
+        # Print the image we're trying to pull (for debugging)
+        echo "Attempting to pull image: $DOCKER_IMAGE"
 
-      - name: Pull and deploy using docker-compose
-        run: |
-          docker-compose down || true
-          docker-compose pull
-          docker-compose up -d
+        # Stop and remove existing containers
+        docker-compose down || true
+
+        # Pull the latest image
+        docker pull $DOCKER_IMAGE
+
+        # Start the containers
+        IMAGE_NAME=$DOCKER_IMAGE docker-compose up -d
