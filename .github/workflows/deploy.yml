@@ -41,23 +41,12 @@ jobs:
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
           echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
 
-      # Add explicit Docker login before pulling
       - name: Docker Login
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u namanrai1403 --password-stdin
 
       - name: Pull and deploy using docker-compose
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-app:latest
         run: |
-          # Print the image we're trying to pull (for debugging)
-          echo "Attempting to pull image: $DOCKER_IMAGE"
-
-          # Stop and remove existing containers
           docker-compose down || true
-
-          # Pull the latest image
-          docker pull $DOCKER_IMAGE
-
-          # Start the containers
-          IMAGE_NAME=$DOCKER_IMAGE docker-compose up -d
+          docker-compose pull
+          docker-compose up -d
