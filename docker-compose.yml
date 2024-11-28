@@ -9,7 +9,6 @@ services:
       - .env # Use the dynamically generated .env file
     restart: always
     volumes:
-      - .:/usr/src/app
       - ./logs:/usr/src/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
