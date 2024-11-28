@@ -2,11 +2,11 @@ version: "3.8"
 
 services:
   app:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/nodejs-app:latest # Replace with your actual image
     ports:
       - "3000:3000"
     env_file:
-      - .env # Use the dynamically generated .env file
+      - .env
     restart: always
     volumes:
       - ./logs:/usr/src/app/logs
