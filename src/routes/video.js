@@ -1,4 +1,3 @@
-// src/routes/video.js
 import express from "express";
 import { uploadToS3 } from "../utils/uploadToS3.js";
 import { validateSchema } from "../middleware/validate.js";
@@ -10,29 +9,21 @@ const router = express.Router();
 
 router.post("/upload", validateSchema(videoUploadSchema), async (req, res) => {
   try {
-    const { videoPath } = req.body;
+    const { fileData, fileName } = req.body;
+    console.log(fileData);
 
-    // Remove the file:/// prefix and decode the URI
-    let cleanPath = decodeURIComponent(videoPath.replace("file:///", ""));
+    // Decode Base64 file data and write to a temporary file
+    const tempFilePath = path.join(__dirname, `../../temp/${fileName}`);
+    const fileBuffer = Buffer.from(fileData, "base64");
 
-    // Handle Windows paths properly
-    if (process.platform === "win32") {
-      // Ensure the drive letter is properly cased (e.g., C:)
-      if (cleanPath.match(/^[a-zA-Z]:/)) {
-        cleanPath = cleanPath[0].toUpperCase() + cleanPath.slice(1);
-      }
-      // Convert forward slashes to backslashes for Windows
-      cleanPath = cleanPath.replace(/\//g, "\\");
-    }
+    await fs.writeFile(tempFilePath, fileBuffer);
 
-    // Check if file exists
-    if (!(await fs.pathExists(cleanPath))) {
-      return res.status(404).json({
-        error: `Video file not found at path: ${cleanPath}`,
-      });
-    }
+    // Upload to S3
+    const videoUrl = await uploadToS3(tempFilePath);
 
-    const videoUrl = await uploadToS3(cleanPath);
+    // Cleanup temporary file
+    await fs.unlink(tempFilePath);
+
     res.json({ videoUrl });
   } catch (error) {
     console.error("Error in video upload:", error);

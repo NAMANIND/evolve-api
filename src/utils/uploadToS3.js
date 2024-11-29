@@ -21,7 +21,7 @@ export const uploadToS3 = async (filePath) => {
     const videoUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
     // Clean up the temporary file
-    await fs.unlink(filePath);
+    // await fs.unlink(filePath);
 
     return videoUrl;
   } catch (error) {

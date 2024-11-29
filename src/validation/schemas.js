@@ -26,13 +26,19 @@ export const exerciseSchema = z.object({
 });
 
 export const videoUploadSchema = z.object({
-  videoPath: z
+  fileData: z
     .string()
-    .min(1, "Video path is required")
-    .refine((path) => path.startsWith("file:///"), {
-      message: "Invalid video path format. Must start with file:///",
-    })
-    .refine((path) => path.endsWith(".mp4"), {
-      message: "Only MP4 videos are supported",
-    }),
+    .min(1, "File data is required")
+    .refine(
+      (data) => {
+        try {
+          Buffer.from(data, "base64"); // Check if it is a valid Base64 string
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Invalid Base64 file data" }
+    ),
+  fileName: z.string().min(1, "File name is required"),
 });
