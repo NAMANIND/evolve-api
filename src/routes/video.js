@@ -1,28 +1,23 @@
 import express from "express";
+import multer from "multer";
 import { uploadToS3 } from "../utils/uploadToS3.js";
-import { validateSchema } from "../middleware/validate.js";
-import { videoUploadSchema } from "../validation/schemas.js";
-import fs from "fs-extra";
-import path from "path";
+
+const upload = multer({
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+});
 
 const router = express.Router();
 
-router.post("/upload", validateSchema(videoUploadSchema), async (req, res) => {
+router.post("/upload", upload.single("video"), async (req, res) => {
   try {
-    const { fileData, fileName } = req.body;
-    console.log(fileData);
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-    // Decode Base64 file data and write to a temporary file
-    const tempFilePath = path.join(__dirname, `../../temp/${fileName}`);
-    const fileBuffer = Buffer.from(fileData, "base64");
-
-    await fs.writeFile(tempFilePath, fileBuffer);
-
-    // Upload to S3
-    const videoUrl = await uploadToS3(tempFilePath);
-
-    // Cleanup temporary file
-    await fs.unlink(tempFilePath);
+    // Upload directly from the uploaded file
+    const videoUrl = await uploadToS3(req.file.path);
 
     res.json({ videoUrl });
   } catch (error) {

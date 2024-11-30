@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import userRoutes from "./routes/user.js";
 import exerciseRoutes from "./routes/exercise.js";
 import videoRoutes from "./routes/video.js";
-
+import bodyParser from "body-parser";
 dotenv.config();
 
 const app = express();
@@ -24,5 +24,9 @@ app.use("/api/videos", videoRoutes);
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
+
+// Increase limit for body parsing
+app.use(bodyParser.json({ limit: "50mb" })); // For JSON payload
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true })); // For URL-encoded payload
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
