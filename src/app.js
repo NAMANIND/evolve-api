@@ -24,6 +24,13 @@ app.use("/api/videos", videoRoutes);
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
+// get meta constants
+app.get("/api/constants", (req, res) => {
+  res.status(200).send({
+    videoDuration: 5,
+    apiUrl: "https://zaapi.me",
+  });
+});
 
 // Increase limit for body parsing
 app.use(bodyParser.json({ limit: "50mb" })); // For JSON payload
