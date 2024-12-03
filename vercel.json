@@ -7,7 +7,7 @@
     }
   ],
   "functions": {
-    "/*": {
+    "src/*": {
       "maxDuration": 60
     }
   }
